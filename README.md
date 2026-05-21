@@ -95,7 +95,7 @@ BackupSheep currently supports two installation paths:
 - Native setup for local development with Django's development server
 - Docker setup for a containerized runtime using the repository's existing Dockerfiles
 
-Both methods require PostgreSQL 14.x and a configured `.env` file.
+Both methods require PostgreSQL 14.x. Native setup still expects a configured `.env` file, while the included Docker Compose flow now provides local defaults without one.
 
 ### Method 1: Native
 
@@ -188,8 +188,6 @@ Use this path if you want to run the app in the same production-style shape used
 #### Docker prerequisites
 
 - Docker
-- PostgreSQL 14.x running outside the container, or another reachable PostgreSQL instance
-- A configured `.env` file in the repository root
 
 #### Docker step 1: Clone the repository
 
@@ -198,50 +196,11 @@ git clone https://github.com/bilal414/backupsheep.git
 cd backupsheep
 ```
 
-#### Docker step 2: Configure environment variables
+#### Docker step 2: Build the application image
 
-```bash
-cp .env_sample .env
-```
+The included `docker-compose.yml` now supplies the minimum local Django and PostgreSQL settings for you, so you can build and run the stack without creating a `.env` file first.
 
-Set the same minimum values required for the native setup, especially the PostgreSQL connection values:
-
-- `DJANGO_SECRET_KEY`
-- `DJANGO_DEBUG`
-- `DJANGO_ALLOWED_HOSTS`
-- `DJANGO_SERVER`
-- `APP_DOMAIN`
-- `APP_PROTOCOL`
-- `APP_NAME`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_HOST`
-- `DB_PORT`
-
-If you use the included `docker-compose.yml`, set these values to match the bundled database service:
-
-- `DB_NAME=backupsheep`
-- `DB_USER=backupsheep`
-- `DB_PASSWORD=backupsheep`
-- `DB_HOST=db`
-- `DB_PORT=5432`
-
-#### Docker step 3: Build the base image
-
-The application image depends on a local `backupsheep-base` image defined by `DockerfileBase`. If you want to use the compose example, build the base image first:
-
-```bash
-docker compose build backupsheep-base
-```
-
-You can still build manually if preferred:
-
-```bash
-docker build -f DockerfileBase -t backupsheep-base .
-```
-
-#### Docker step 4: Build the application image
+If you want to override those defaults, either edit `docker-compose.yml` or provide environment variables when you run the container manually.
 
 Using Docker Compose:
 
@@ -260,13 +219,26 @@ docker build -t backupsheep .
 Using Docker Compose:
 
 ```bash
-docker compose up
+docker compose up --build
 ```
 
 Or run the app container manually:
 
 ```bash
-docker run --env-file .env -p 8000:80 backupsheep
+docker run -p 8000:80 \
+  -e DJANGO_SERVER=dev \
+  -e DJANGO_DEBUG=true \
+  -e DJANGO_ALLOWED_HOSTS='*' \
+  -e DJANGO_SECRET_KEY=change-this-key \
+  -e APP_DOMAIN=localhost:8000 \
+  -e APP_PROTOCOL=http:// \
+  -e APP_NAME=BackupSheep \
+  -e DB_NAME=backupsheep \
+  -e DB_USER=backupsheep \
+  -e DB_PASSWORD=backupsheep \
+  -e DB_HOST=host.docker.internal \
+  -e DB_PORT=5432 \
+  backupsheep
 ```
 
 The container entrypoint starts Nginx, runs `collectstatic`, applies migrations, and launches Gunicorn automatically.
@@ -276,7 +248,7 @@ Open `http://localhost:8000` after the container starts.
 #### Docker notes
 
 - The compose example lives at `docker-compose.yml`.
-- Because `Dockerfile` uses `FROM backupsheep-base`, build `backupsheep-base` before building the app image.
+- The compose example no longer requires a repository-root `.env` file for local boot.
 - The Docker path is best suited for runtime validation. The native path remains the better contributor workflow.
 
 ## Development

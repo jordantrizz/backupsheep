@@ -7,3 +7,6 @@
 
 # -- repomix
 .repomap-snapshot.md
+
+# -- Docker tings
+build.log

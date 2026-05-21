@@ -16,26 +16,48 @@ from pathlib import Path
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 import google.auth
-from dotenv import load_dotenv
 from dotenv import dotenv_values
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+
+def _load_config():
+    sample_path = os.path.join(BASE_DIR, ".env_sample")
+    env_path = os.path.join(BASE_DIR, ".env")
+
+    config_values = {
+        **dotenv_values(sample_path),
+    }
+
+    if os.path.exists(env_path):
+        config_values.update(dotenv_values(env_path))
+
+    config_values.update(os.environ)
+    return config_values
+
+
+def _get_bool(value):
+    if isinstance(value, bool):
+        return value
+
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _get_list(value):
+    return [item.strip() for item in str(value).split(",") if item.strip()]
+
 if "BACKUPSHEEP_SECRETS" in os.environ:
     config = json.loads(os.environ.get("BACKUPSHEEP_SECRETS"))
 else:
-    config = {
-        **dotenv_values(".env"),  # load shared development variables
-        **os.environ,  # override loaded values with environment variables
-    }
+    config = _load_config()
 
 # # environ.Env.read_env(".env")
 SECRET_KEY = config["DJANGO_SECRET_KEY"]
-DEBUG = config["DJANGO_DEBUG"]
+DEBUG = _get_bool(config["DJANGO_DEBUG"])
 DJANGO_SERVER = config["DJANGO_SERVER"]
-ALLOWED_HOSTS = [config["DJANGO_ALLOWED_HOSTS"]]
+ALLOWED_HOSTS = _get_list(config["DJANGO_ALLOWED_HOSTS"])
 HTTPS_ENABLED = False
 CSRF_TRUSTED_ORIGINS = [f"{config['APP_PROTOCOL']}{config['APP_DOMAIN']}"]
 # Application definition
@@ -83,7 +105,7 @@ TEMPLATES = [
         ],
         "APP_DIRS": True,
         "OPTIONS": {
-            "debug": config["DJANGO_DEBUG"],
+            "debug": DEBUG,
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",

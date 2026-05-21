@@ -1,12 +1,4 @@
 services:
-  backupsheep-base:
-    image: backupsheep-base
-    build:
-      context: .
-      dockerfile: DockerfileBase
-    profiles:
-      - build-only
-
   db:
     image: postgres:14
     restart: unless-stopped
@@ -26,11 +18,19 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - db
-    env_file:
-      - .env
     environment:
+      DJANGO_SERVER: dev
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DJANGO_SECRET_KEY: change-this-key
+      APP_DOMAIN: localhost:8000
+      APP_PROTOCOL: http://
+      APP_NAME: BackupSheep
+      DB_NAME: backupsheep
+      DB_USER: backupsheep
+      DB_PASSWORD: backupsheep
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: "5432"
     ports:
       - "8000:80"
     restart: unless-stopped
