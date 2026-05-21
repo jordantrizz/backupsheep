@@ -33,6 +33,7 @@
 * `apps/_migrations/`: custom migration module for the `apps` Django app.
 * `apps/api/v1/`: REST API implementation.
 * `apps/console/_templates/` and `apps/console/_static/`: HTML and static assets.
+* `.codemaps/`: repository code maps for fast codebase navigation and context gathering.
 * `.env_sample`: expected environment variables.
 * `Dockerfile`, `init.sh`, `startup.sh`: container/bootstrap commands.
 

@@ -81,9 +81,41 @@ Connect your cloud storage providers and store backups in multiple storage accou
 ## Notice  
 This is a complete rewrite of the BackupSheep application. I have started pushing code to the repository,  but it is not functional yet. Please follow the repository to stay updated.  
   
-## Technology Stack  
-Django, PostgreSQL, AlpineJS and TailwindCSS.   
-  
-## Background   
-BackupSheep was a paid SaaS application from 2017 to 2023, serving over 6,500 users at its peak. Unfortunately, a poor decision to offer a lifetime deal (LTD) through AppSumo without proper due diligence led to a decline. 
+## Technology Stack
+
+Django, PostgreSQL, AlpineJS and TailwindCSS.
+
+## Repository Map with Repomix
+
+This repository can generate a compact repo map for AI/code-review workflows using `repomix`.
+
+Install it globally if needed:
+
+```bash
+npm install -g repomix
+```
+
+Generate a lightweight repository snapshot with directory structure and metadata only:
+
+```bash
+repomix --no-files --style markdown --output .repomap-snapshot.md
+```
+
+Generate a richer structural map that compresses source files into high-level symbols such as classes and functions:
+
+```bash
+repomix --compress --style markdown --output .repomap-snapshot.md
+```
+
+Useful options for this repo:
+
+- `--include-full-directory-structure` to force the full tree into the output.
+- `--token-count-tree` to inspect which folders/files dominate the context window.
+- `--no-git-sort-by-changes` if you want a stable alphabetical tree instead of git-weighted ordering.
+
+Open `.repomap-snapshot.md` after generation and share that file when you want an AI assistant to get fast, repo-wide context without loading every source file individually.
+
+## Background
+
+BackupSheep was a paid SaaS application from 2017 to 2023, serving over 6,500 users at its peak. Unfortunately, a poor decision to offer a lifetime deal (LTD) through AppSumo without proper due diligence led to a decline.
 As a result, BackupSheep was shut down in 2023. Rather than letting years of development go to waste, I have decided to open source BackupSheep.

@@ -4,3 +4,6 @@
 *.iml
 *.pyc
 /.env
+
+# -- repomix
+.repompa-snapshot.md
