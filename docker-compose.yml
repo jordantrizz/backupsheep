@@ -1,0 +1,39 @@
+services:
+  backupsheep-base:
+    image: backupsheep-base
+    build:
+      context: .
+      dockerfile: DockerfileBase
+    profiles:
+      - build-only
+
+  db:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: backupsheep
+      POSTGRES_USER: backupsheep
+      POSTGRES_PASSWORD: backupsheep
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    image: backupsheep
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+    ports:
+      - "8000:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

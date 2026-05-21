@@ -183,7 +183,7 @@ Open `http://localhost:8000` after the server starts.
 
 ### Method 2: Docker
 
-Use this path if you want to run the app in the same production-style shape used by the repository's container entrypoints.
+Use this path if you want to run the app in the same production-style shape used by the repository's container entrypoints. The repository now includes a `docker-compose.yml` example that starts PostgreSQL and the application together.
 
 #### Docker prerequisites
 
@@ -219,11 +219,23 @@ Set the same minimum values required for the native setup, especially the Postgr
 - `DB_HOST`
 - `DB_PORT`
 
-Point `DB_HOST` at a PostgreSQL server reachable from the container.
+If you use the included `docker-compose.yml`, set these values to match the bundled database service:
+
+- `DB_NAME=backupsheep`
+- `DB_USER=backupsheep`
+- `DB_PASSWORD=backupsheep`
+- `DB_HOST=db`
+- `DB_PORT=5432`
 
 #### Docker step 3: Build the base image
 
-The application image depends on a local `backupsheep-base` image defined by `DockerfileBase`.
+The application image depends on a local `backupsheep-base` image defined by `DockerfileBase`. If you want to use the compose example, build the base image first:
+
+```bash
+docker compose build backupsheep-base
+```
+
+You can still build manually if preferred:
 
 ```bash
 docker build -f DockerfileBase -t backupsheep-base .
@@ -231,11 +243,27 @@ docker build -f DockerfileBase -t backupsheep-base .
 
 #### Docker step 4: Build the application image
 
+Using Docker Compose:
+
+```bash
+docker compose build app
+```
+
+Or build manually:
+
 ```bash
 docker build -t backupsheep .
 ```
 
 #### Docker step 5: Run the container
+
+Using Docker Compose:
+
+```bash
+docker compose up
+```
+
+Or run the app container manually:
 
 ```bash
 docker run --env-file .env -p 8000:80 backupsheep
@@ -247,7 +275,8 @@ Open `http://localhost:8000` after the container starts.
 
 #### Docker notes
 
-- The repo does not currently include a committed `docker-compose.yml` for wiring the app and PostgreSQL together.
+- The compose example lives at `docker-compose.yml`.
+- Because `Dockerfile` uses `FROM backupsheep-base`, build `backupsheep-base` before building the app image.
 - The Docker path is best suited for runtime validation. The native path remains the better contributor workflow.
 
 ## Development
