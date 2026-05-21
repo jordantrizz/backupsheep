@@ -1,0 +1,114 @@
+services:
+  db:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: backupsheep
+      POSTGRES_USER: backupsheep
+      POSTGRES_PASSWORD: backupsheep
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  app:
+    image: backupsheep
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      APP_TIER: full
+      APP_PROCESS: web
+      RUN_MIGRATIONS: "true"
+      ENABLE_ASYNC_WORKERS: "true"
+      APP_DB_BACKEND: postgres
+      APP_CACHE_BACKEND: locmem
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: django-db
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      DJANGO_SERVER: dev
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DJANGO_SECRET_KEY: change-this-key
+      APP_DOMAIN: localhost:8000
+      APP_PROTOCOL: http://
+      APP_NAME: BackupSheep
+      DB_NAME: backupsheep
+      DB_USER: backupsheep
+      DB_PASSWORD: backupsheep
+      DB_HOST: db
+      DB_PORT: "5432"
+    ports:
+      - "8000:80"
+    restart: unless-stopped
+
+  worker:
+    image: backupsheep
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      APP_TIER: full
+      APP_PROCESS: worker
+      RUN_MIGRATIONS: "false"
+      ENABLE_ASYNC_WORKERS: "true"
+      APP_DB_BACKEND: postgres
+      APP_CACHE_BACKEND: locmem
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: django-db
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      DJANGO_SERVER: dev
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DJANGO_SECRET_KEY: change-this-key
+      APP_DOMAIN: localhost:8000
+      APP_PROTOCOL: http://
+      APP_NAME: BackupSheep
+      DB_NAME: backupsheep
+      DB_USER: backupsheep
+      DB_PASSWORD: backupsheep
+      DB_HOST: db
+      DB_PORT: "5432"
+    restart: unless-stopped
+
+  beat:
+    image: backupsheep
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      APP_TIER: full
+      APP_PROCESS: beat
+      RUN_MIGRATIONS: "false"
+      ENABLE_ASYNC_WORKERS: "true"
+      APP_DB_BACKEND: postgres
+      APP_CACHE_BACKEND: locmem
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: django-db
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      DJANGO_SERVER: dev
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DJANGO_SECRET_KEY: change-this-key
+      APP_DOMAIN: localhost:8000
+      APP_PROTOCOL: http://
+      APP_NAME: BackupSheep
+      DB_NAME: backupsheep
+      DB_USER: backupsheep
+      DB_PASSWORD: backupsheep
+      DB_HOST: db
+      DB_PORT: "5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

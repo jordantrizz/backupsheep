@@ -1,30 +1,17 @@
 services:
-  db:
-    image: postgres:14
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: backupsheep
-      POSTGRES_USER: backupsheep
-      POSTGRES_PASSWORD: backupsheep
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
   app:
     image: backupsheep
     build:
       context: .
       dockerfile: Dockerfile
-    depends_on:
-      - db
     environment:
-      APP_TIER: standard
+      APP_TIER: lite
       APP_PROCESS: web
       RUN_MIGRATIONS: "true"
       ENABLE_ASYNC_WORKERS: "false"
-      APP_DB_BACKEND: postgres
+      APP_DB_BACKEND: sqlite
       APP_CACHE_BACKEND: locmem
+      SQLITE_PATH: /data/backupsheep.sqlite3
       DJANGO_SERVER: dev
       DJANGO_DEBUG: "true"
       DJANGO_ALLOWED_HOSTS: "*"
@@ -32,14 +19,11 @@ services:
       APP_DOMAIN: localhost:8000
       APP_PROTOCOL: http://
       APP_NAME: BackupSheep
-      DB_NAME: backupsheep
-      DB_USER: backupsheep
-      DB_PASSWORD: backupsheep
-      DB_HOST: db
-      DB_PORT: "5432"
     ports:
       - "8000:80"
+    volumes:
+      - backupsheep_sqlite:/data
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  backupsheep_sqlite:

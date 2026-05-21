@@ -95,14 +95,20 @@ BackupSheep currently supports two installation paths:
 - Native setup for local development with Django's development server
 - Docker setup for a containerized runtime using the repository's existing Dockerfiles
 
-Both methods require PostgreSQL 14.x. Native setup still expects a configured `.env` file, while the included Docker Compose flow now provides local defaults without one.
+Both methods support multiple runtime tiers. Native setup still expects a configured `.env` file, while the included Docker Compose files provide local defaults.
+
+Available tiers:
+
+- `lite`: SQLite, local memory cache, no external broker
+- `standard`: PostgreSQL, local memory cache, no external broker
+- `full`: PostgreSQL, RabbitMQ, web plus worker/beat processes
 
 ### Method 1: Native
 
 ### Native prerequisites
 
 - Python 3.12
-- PostgreSQL 14.x
+- SQLite for `lite` mode, or PostgreSQL 14.x for `standard`/`full`
 - `pip` and `venv`
 
 ### Native step 1: Clone the repository
@@ -126,9 +132,9 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Native step 4: Create a PostgreSQL database
+### Native step 4: Choose a runtime tier
 
-Create an empty PostgreSQL 14.x database and a user with permission to manage it. You will add those values to `.env` in the next step.
+For the fastest local boot, use `lite` mode with SQLite and local memory cache. For PostgreSQL-backed local parity, use `standard`.
 
 ### Native step 5: Configure environment variables
 
@@ -145,6 +151,15 @@ At minimum, set these values in `.env`:
 - `APP_DOMAIN`
 - `APP_PROTOCOL`
 - `APP_NAME`
+
+For `lite`, also set:
+
+- `APP_TIER=lite`
+- `APP_DB_BACKEND=sqlite`
+- `APP_CACHE_BACKEND=locmem`
+
+For PostgreSQL-backed modes, also set:
+
 - `DB_NAME`
 - `DB_USER`
 - `DB_PASSWORD`
@@ -157,10 +172,13 @@ Most third-party integration credentials in `.env_sample` are optional for a bas
 
 ```bash
 python manage.py migrate
-python manage.py createcachetable
 ```
 
-The cache table is required because the default cache backend is database-backed.
+If you use the database cache backend, also run:
+
+```bash
+python manage.py createcachetable
+```
 
 ### Native step 7: Collect static assets
 
@@ -179,11 +197,12 @@ Open `http://localhost:8000` after the server starts.
 ### Runtime notes
 
 - Local development uses Django's built-in server.
-- The repository includes Celery, `django-celery-beat`, and `django-celery-results`, but no committed local broker configuration is documented yet.
+- `lite` mode defaults to SQLite and local memory cache so it can boot without external services.
+- The repository includes Celery, `django-celery-beat`, and `django-celery-results`. In non-worker modes, tasks can fall back to eager execution.
 
 ### Method 2: Docker
 
-Use this path if you want to run the app in the same production-style shape used by the repository's container entrypoints. The repository now includes a `docker-compose.yml` example that starts PostgreSQL and the application together.
+Use this path if you want to run the app in a tiered containerized setup.
 
 #### Docker prerequisites
 
@@ -196,16 +215,23 @@ git clone https://github.com/bilal414/backupsheep.git
 cd backupsheep
 ```
 
-#### Docker step 2: Build the application image
+#### Docker step 2: Choose a Compose file
 
-The included `docker-compose.yml` now supplies the minimum local Django and PostgreSQL settings for you, so you can build and run the stack without creating a `.env` file first.
+- `docker-compose.lite.yml`: single-container SQLite deployment for homelab and fast boot
+- `docker-compose.standard.yml`: PostgreSQL-backed app container
+- `docker-compose.full.yml`: PostgreSQL, RabbitMQ, web, worker, and beat
+- `docker-compose.yml`: the default PostgreSQL-backed standard setup
 
-If you want to override those defaults, either edit `docker-compose.yml` or provide environment variables when you run the container manually.
+#### Docker step 3: Build the application image
+
+The included Compose files now supply minimum local settings for you, so you can build and run the stack without creating a `.env` file first.
+
+If you want to override those defaults, either edit the selected Compose file or provide environment variables when you run the container manually.
 
 Using Docker Compose:
 
 ```bash
-docker compose build app
+docker compose -f docker-compose.lite.yml build app
 ```
 
 Or build manually:
@@ -214,9 +240,27 @@ Or build manually:
 docker build -t backupsheep .
 ```
 
-#### Docker step 5: Run the container
+#### Docker step 4: Run the selected tier
 
-Using Docker Compose:
+Lite tier:
+
+```bash
+docker compose -f docker-compose.lite.yml up --build
+```
+
+Standard tier:
+
+```bash
+docker compose -f docker-compose.standard.yml up --build
+```
+
+Full tier:
+
+```bash
+docker compose -f docker-compose.full.yml up --build
+```
+
+The default Compose file continues to point at the standard PostgreSQL-backed setup:
 
 ```bash
 docker compose up --build
@@ -233,6 +277,9 @@ docker run -p 8000:80 \
   -e APP_DOMAIN=localhost:8000 \
   -e APP_PROTOCOL=http:// \
   -e APP_NAME=BackupSheep \
+  -e APP_TIER=standard \
+  -e APP_DB_BACKEND=postgres \
+  -e APP_CACHE_BACKEND=locmem \
   -e DB_NAME=backupsheep \
   -e DB_USER=backupsheep \
   -e DB_PASSWORD=backupsheep \
@@ -247,8 +294,9 @@ Open `http://localhost:8000` after the container starts.
 
 #### Docker notes
 
-- The compose example lives at `docker-compose.yml`.
-- The compose example no longer requires a repository-root `.env` file for local boot.
+- The tiered Compose files live at `docker-compose.lite.yml`, `docker-compose.standard.yml`, and `docker-compose.full.yml`.
+- The Compose files do not require a repository-root `.env` file for local boot.
+- `lite` is the fastest boot path and does not require any external service containers.
 - The Docker path is best suited for runtime validation. The native path remains the better contributor workflow.
 
 ## Development

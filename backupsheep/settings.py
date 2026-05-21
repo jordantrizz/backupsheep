@@ -48,10 +48,34 @@ def _get_bool(value):
 def _get_list(value):
     return [item.strip() for item in str(value).split(",") if item.strip()]
 
+
+def _get_lower(value, default=""):
+    if value is None:
+        value = default
+
+    return str(value).strip().lower()
+
 if "BACKUPSHEEP_SECRETS" in os.environ:
     config = json.loads(os.environ.get("BACKUPSHEEP_SECRETS"))
 else:
     config = _load_config()
+
+APP_TIER = _get_lower(config.get("APP_TIER"), "standard")
+APP_DB_BACKEND = _get_lower(
+    config.get("APP_DB_BACKEND"),
+    "sqlite" if APP_TIER == "lite" else "postgres",
+)
+APP_CACHE_BACKEND = _get_lower(
+    config.get("APP_CACHE_BACKEND"),
+    "locmem" if APP_TIER == "lite" else "database",
+)
+ENABLE_ASYNC_WORKERS = _get_bool(
+    config.get("ENABLE_ASYNC_WORKERS", APP_TIER == "full")
+)
+SQLITE_PATH = config.get(
+    "SQLITE_PATH",
+    os.path.join(BASE_DIR, "db.sqlite3"),
+)
 
 # # environ.Env.read_env(".env")
 SECRET_KEY = config["DJANGO_SECRET_KEY"]
@@ -69,7 +93,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.postgres",
+]
+
+if APP_DB_BACKEND == "postgres":
+    INSTALLED_APPS.append("django.contrib.postgres")
+
+INSTALLED_APPS += [
     "rest_framework",
     "rest_framework.authtoken",
     "django.contrib.humanize",
@@ -121,12 +150,20 @@ TEMPLATES = [
     },
 ]
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "core_cache",
+if APP_CACHE_BACKEND == "locmem":
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "backupsheep-local-cache",
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "core_cache",
+        }
+    }
 
 WSGI_APPLICATION = "backupsheep.wsgi.application"
 
@@ -154,20 +191,40 @@ REST_FRAMEWORK = {
     ),
 }
 
+CELERY_BROKER_URL = config.get(
+    "CELERY_BROKER_URL",
+    "memory://" if not ENABLE_ASYNC_WORKERS else "amqp://guest:guest@rabbitmq:5672//",
+)
+CELERY_RESULT_BACKEND = config.get("CELERY_RESULT_BACKEND", "django-db")
+CELERY_TASK_ALWAYS_EAGER = _get_bool(
+    config.get("CELERY_TASK_ALWAYS_EAGER", not ENABLE_ASYNC_WORKERS)
+)
+CELERY_TASK_EAGER_PROPAGATES = _get_bool(
+    config.get("CELERY_TASK_EAGER_PROPAGATES", DEBUG)
+)
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 MIGRATION_MODULES = {"apps": "apps._migrations"}
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config["DB_NAME"],
-        "USER": config["DB_USER"],
-        "PASSWORD": config["DB_PASSWORD"],
-        "HOST": config["DB_HOST"],
-        "PORT": config["DB_PORT"],
-    },
-}
+if APP_DB_BACKEND == "sqlite":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": SQLITE_PATH,
+        },
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config["DB_NAME"],
+            "USER": config["DB_USER"],
+            "PASSWORD": config["DB_PASSWORD"],
+            "HOST": config["DB_HOST"],
+            "PORT": config["DB_PORT"],
+        },
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
