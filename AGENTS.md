@@ -17,6 +17,7 @@
 
 * BackupSheep originally operated as a SaaS product hosted on AWS.
 * This fork is intended to run in Docker and be self-hosted rather than deployed as the original AWS-hosted SaaS.
+* Some parts of the original product are missing from this fork because the full SaaS codebase was not released and some behaviors depended on AWS-hosted infrastructure or services.
 * This is a Django monolith, not a microservice repo.
 * `backupsheep/` contains project settings, root URLs, ASGI/WSGI, and Celery bootstrap.
 * `apps/` is the main domain package. It holds models, API endpoints, console UI modules, migrations, and provider/task integrations.
@@ -66,6 +67,7 @@
 * Do keep API changes aligned across `urls.py`, `views.py`, `serializers.py`, `permissions.py`, and `filters.py` when that pattern already exists.
 * Do scope data access to the authenticated member/account; avoid broad unfiltered querysets.
 * Do make small, surgical edits. This repo has many repeated provider modules, so broad refactors carry high regression risk.
+* Do assume some missing surfaces are expected in this fork; when you find one, record it in `MISSING.md` and add the smallest safe compatibility fallback needed so the project still builds and runs, such as a blank implementation, no-op, shim, or explicit "missing" message.
 * Do not introduce a new framework, service layer, or generic abstraction unless the existing code clearly uses it.
 * Do not move migrations back to default app locations or rename large provider trees casually.
 * Do not assume a frontend SPA build pipeline exists.
