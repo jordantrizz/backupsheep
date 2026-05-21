@@ -2033,6 +2033,9 @@ class CoreStorageBS(TimeStampedModel):
         return True
 
 
+CoreStorageDefault = CoreStorageBS
+
+
 class CoreStorage(TimeStampedModel):
     class Status(models.IntegerChoices):
         ACTIVE = 1, "Active"

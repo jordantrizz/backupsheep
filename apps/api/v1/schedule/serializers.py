@@ -6,10 +6,10 @@ import humanfriendly
 import pytz
 from botocore.exceptions import ClientError
 from celery.schedules import crontab_parser
+from django.conf import settings
 from django.utils.timezone import get_current_timezone
 from rest_framework import serializers
 
-from app_backupsheep_com import settings
 from apps.console.account.models import CoreAccount
 from apps.console.api.v1.utils.api_helpers import (
     CurrentAccountDefault,

@@ -3,7 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_datatables.filters import DatatablesFilterBackend
-from slugify import slugify
+from django.utils.text import slugify
 
 from apps.console.account.models import CoreAccountGroup
 from .filters import CoreAccountGroupFilter
