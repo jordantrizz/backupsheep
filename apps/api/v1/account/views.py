@@ -10,7 +10,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_datatables.filters import DatatablesFilterBackend
 from rest_framework.response import Response
 from apps.console.account.models import CoreAccount
-from apps.console.billing.models import CorePlan
 from apps.console.utils.models import UtilAppSumoCode
 from .filters import CoreAccountFilter
 from .permissions import CoreAccountViewPermissions

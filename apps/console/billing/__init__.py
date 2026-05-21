@@ -1,0 +1,1 @@
+"""Placeholder billing domain for self-hosted compatibility."""

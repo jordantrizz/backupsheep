@@ -829,6 +829,16 @@ def calc_stats_storage_insight(self):
 
 
 @current_app.task(
+    name="billing_sync_all",
+    track_started=True,
+    bind=True,
+)
+def billing_sync_all(self, billing_id=None):
+    capture_message(f"billing_sync_all placeholder invoked for billing_id={billing_id}")
+    return {"billing_id": billing_id, "status": "missing-billing-module"}
+
+
+@current_app.task(
     name="cleanup_storage",
     track_started=True,
     default_retry_delay=1 * 60,
