@@ -90,40 +90,47 @@ Django, PostgreSQL, AlpineJS and TailwindCSS.
 
 ## Installation
 
-These steps install and run BackupSheep locally with Django's development server.
+BackupSheep currently supports two installation paths:
 
-### Prerequisites
+- Native setup for local development with Django's development server
+- Docker setup for a containerized runtime using the repository's existing Dockerfiles
+
+Both methods require PostgreSQL 14.x and a configured `.env` file.
+
+### Method 1: Native
+
+### Native prerequisites
 
 - Python 3.12
 - PostgreSQL 14.x
 - `pip` and `venv`
 
-### 1. Clone the repository
+### Native step 1: Clone the repository
 
 ```bash
 git clone https://github.com/bilal414/backupsheep.git
 cd backupsheep
 ```
 
-### 2. Create a virtual environment
+### Native step 2: Create a virtual environment
 
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+### Native step 3: Install dependencies
 
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Create a PostgreSQL database
+### Native step 4: Create a PostgreSQL database
 
 Create an empty PostgreSQL 14.x database and a user with permission to manage it. You will add those values to `.env` in the next step.
 
-### 5. Configure environment variables
+### Native step 5: Configure environment variables
 
 ```bash
 cp .env_sample .env
@@ -146,7 +153,7 @@ At minimum, set these values in `.env`:
 
 Most third-party integration credentials in `.env_sample` are optional for a basic local bootstrapping workflow.
 
-### 6. Initialize the database
+### Native step 6: Initialize the database
 
 ```bash
 python manage.py migrate
@@ -155,13 +162,13 @@ python manage.py createcachetable
 
 The cache table is required because the default cache backend is database-backed.
 
-### 7. Collect static assets
+### Native step 7: Collect static assets
 
 ```bash
 python manage.py collectstatic --noinput
 ```
 
-### 8. Start the application
+### Native step 8: Start the application
 
 ```bash
 python manage.py runserver 0.0.0.0:8000
@@ -172,8 +179,76 @@ Open `http://localhost:8000` after the server starts.
 ### Runtime notes
 
 - Local development uses Django's built-in server.
-- Production-style startup in this repository uses Gunicorn and Nginx via `init.sh`, `startup.sh`, and `Dockerfile`.
 - The repository includes Celery, `django-celery-beat`, and `django-celery-results`, but no committed local broker configuration is documented yet.
+
+### Method 2: Docker
+
+Use this path if you want to run the app in the same production-style shape used by the repository's container entrypoints.
+
+#### Docker prerequisites
+
+- Docker
+- PostgreSQL 14.x running outside the container, or another reachable PostgreSQL instance
+- A configured `.env` file in the repository root
+
+#### Docker step 1: Clone the repository
+
+```bash
+git clone https://github.com/bilal414/backupsheep.git
+cd backupsheep
+```
+
+#### Docker step 2: Configure environment variables
+
+```bash
+cp .env_sample .env
+```
+
+Set the same minimum values required for the native setup, especially the PostgreSQL connection values:
+
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG`
+- `DJANGO_ALLOWED_HOSTS`
+- `DJANGO_SERVER`
+- `APP_DOMAIN`
+- `APP_PROTOCOL`
+- `APP_NAME`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_HOST`
+- `DB_PORT`
+
+Point `DB_HOST` at a PostgreSQL server reachable from the container.
+
+#### Docker step 3: Build the base image
+
+The application image depends on a local `backupsheep-base` image defined by `DockerfileBase`.
+
+```bash
+docker build -f DockerfileBase -t backupsheep-base .
+```
+
+#### Docker step 4: Build the application image
+
+```bash
+docker build -t backupsheep .
+```
+
+#### Docker step 5: Run the container
+
+```bash
+docker run --env-file .env -p 8000:80 backupsheep
+```
+
+The container entrypoint starts Nginx, runs `collectstatic`, applies migrations, and launches Gunicorn automatically.
+
+Open `http://localhost:8000` after the container starts.
+
+#### Docker notes
+
+- The repo does not currently include a committed `docker-compose.yml` for wiring the app and PostgreSQL together.
+- The Docker path is best suited for runtime validation. The native path remains the better contributor workflow.
 
 ## Development
 
@@ -210,7 +285,7 @@ There does not appear to be a committed full test suite yet, so prefer targeted 
 
 Scheduling and job state are part of the application, and the repo includes Celery-related packages plus `django-celery-beat` models. However, the repository does not currently document a local broker or worker startup flow. If you are developing scheduling or async task features, expect to provide your own broker configuration until that setup is documented in-repo.
 
-### Optional container/runtime context
+### Container/runtime context
 
 The container entrypoints run a production-style sequence:
 
