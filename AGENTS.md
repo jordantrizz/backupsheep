@@ -15,6 +15,8 @@
 
 ## Architecture overview
 
+* BackupSheep originally operated as a SaaS product hosted on AWS.
+* This fork is intended to run in Docker and be self-hosted rather than deployed as the original AWS-hosted SaaS.
 * This is a Django monolith, not a microservice repo.
 * `backupsheep/` contains project settings, root URLs, ASGI/WSGI, and Celery bootstrap.
 * `apps/` is the main domain package. It holds models, API endpoints, console UI modules, migrations, and provider/task integrations.
