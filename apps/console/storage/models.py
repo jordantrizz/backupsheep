@@ -2011,6 +2011,28 @@ class CoreStorageIBM(TimeStampedModel):
         return True
 
 
+class CoreStorageBS(TimeStampedModel):
+    storage = models.OneToOneField(
+        "CoreStorage", related_name="storage_bs", on_delete=models.CASCADE
+    )
+    bucket_name = models.CharField(max_length=255, null=True, blank=True)
+    prefix = models.CharField(max_length=255, default="", blank=True)
+    endpoint = models.CharField(max_length=255, null=True, blank=True)
+    region = models.CharField(max_length=255, null=True, blank=True)
+    host = models.CharField(max_length=255, null=True, blank=True)
+    username = models.BinaryField(null=True)
+    password = models.BinaryField(null=True)
+    access_key = models.BinaryField(null=True)
+    secret_key = models.BinaryField(null=True)
+    no_delete = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "core_storage_bs"
+
+    def validate(self):
+        return True
+
+
 class CoreStorage(TimeStampedModel):
     class Status(models.IntegerChoices):
         ACTIVE = 1, "Active"
@@ -2173,3 +2195,6 @@ class CoreStorage(TimeStampedModel):
                 raise ValueError(e.__str__())
             else:
                 return False
+
+
+CoreStorageStatus = CoreStorage.Status

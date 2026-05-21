@@ -6,6 +6,7 @@ This file tracks missing or incomplete rewrite surfaces that were patched with l
 
 - `apps.console.api.v1` namespace: added as a compatibility package that points at `apps/api/v1` and `apps/_tasks` so legacy imports keep resolving.
 - `apps.console.billing`: recreated as a placeholder self-hosted billing domain with minimal models for plan, billing, and PayPal credit references.
+- `apps.console.storage.CoreStorageBS`: recreated as a placeholder BackupSheep storage subtype so self-hosted startup can import legacy storage routes without the original hosted storage backend.
 - `rest_framework.serializers.NullBooleanField`: shimmed in `apps/api/v1/__init__.py` because DRF 3.15 removed it while many serializers still use it.
 - `apps/api/v1/utils/api_filters.py`: recreated with a minimal `DateRangeFilter` backend because the module was missing from the rewrite.
 - `apps/api/v1/utils/api_permissions.py`: added a minimal authenticated-only `MemberPermissions` class. This is a placeholder, not a full rewrite of the original permission logic.
