@@ -87,7 +87,11 @@ Django, PostgreSQL, AlpineJS and TailwindCSS.
 
 ## Repository Map with Repomix
 
-This repository can generate a compact repo map for AI/code-review workflows using `repomix`.
+This repository can generate a repo map for high-level AI/code-review workflows using `repomix`.
+
+Important: `.repomap-snapshot.md` can become extremely large, to the point of consuming millions of tokens. Treat it as a temporary, high-level artifact for extracting core features and repository structure, not as routine context to attach to every prompt.
+
+In practice, this file should usually be generated once, used to help update high-level repository guidance such as `AGENTS.md`, and then left out of normal workflows. The snapshot is gitignored for that reason.
 
 Install it globally if needed:
 
@@ -113,7 +117,7 @@ Useful options for this repo:
 - `--token-count-tree` to inspect which folders/files dominate the context window.
 - `--no-git-sort-by-changes` if you want a stable alphabetical tree instead of git-weighted ordering.
 
-Open `.repomap-snapshot.md` after generation and share that file when you want an AI assistant to get fast, repo-wide context without loading every source file individually.
+If you explicitly need to refresh the repository summary, open `.repomap-snapshot.md`, extract the core structure and features you need, and fold that summary back into `AGENTS.md` instead of repeatedly sharing the full snapshot.
 
 ## Background
 

@@ -34,6 +34,7 @@
 * `apps/api/v1/`: REST API implementation.
 * `apps/console/_templates/` and `apps/console/_static/`: HTML and static assets.
 * `.codemaps/`: repository code maps for fast codebase navigation and context gathering.
+* `.repomap-snapshot.md`: root-level generated repository map snapshot. It is intentionally gitignored because it can become extremely large. Use it sparingly, mainly as a one-time input to summarize core features and structure back into this file. If it is missing and you explicitly need to refresh that high-level summary, regenerate it with `repomix --compress --style markdown --output .repomap-snapshot.md`.
 * `.env_sample`: expected environment variables.
 * `Dockerfile`, `init.sh`, `startup.sh`: container/bootstrap commands.
 
@@ -67,3 +68,4 @@
 * Do not move migrations back to default app locations or rename large provider trees casually.
 * Do not assume a frontend SPA build pipeline exists.
 * Do not assume tests, linters, or typecheckers are already wired up; verify with Django checks and the narrowest executable command available.
+* Do not treat `.repomap-snapshot.md` as routine context. It can be millions of tokens; use it only when updating high-level repository guidance such as `AGENTS.md`.
